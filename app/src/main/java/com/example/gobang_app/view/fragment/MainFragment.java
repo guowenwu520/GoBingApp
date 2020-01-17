@@ -34,11 +34,8 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         ButtonRectangle coupeTextView = (ButtonRectangle) root.findViewById(R.id.tv_coupe_mode);
         //wifi模式
         ButtonRectangle wifiTextView = (ButtonRectangle) root.findViewById(R.id.tv_wifi_mode);
-        //蓝牙模式
-        ButtonRectangle blueToothTextView = (ButtonRectangle) root.findViewById(R.id.tv_blue_tooth_mode);
-         wifiTextView.setEnabled(true);
-         blueToothTextView.setEnabled(false);
-        coupeTextView.setOnClickListener(this);
+        //添加点击监听
+         coupeTextView.setOnClickListener(this);
         wifiTextView.setOnClickListener(this);
     }
 
@@ -51,9 +48,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.tv_wifi_mode:
                 intent.putExtra(Constants.GAME_MODE, Constants.WIFI_MODE);
-                break;
-            case R.id.tv_blue_tooth_mode:
-                intent.putExtra(Constants.GAME_MODE, Constants.BLUE_TOOTH_MODE);
                 break;
         }
         startActivity(intent);

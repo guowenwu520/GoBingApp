@@ -21,7 +21,7 @@ import com.example.gobang_app.util.DimenUtil;
  */
 public class GoBangBoard extends View {
 
-    private static final int LINE_COUNT = 15;
+    public static final int LINE_COUNT = 15;
     private static final int BOARD_MARGIN = 40;
     private static final int HALF_CHESS_SIZE = 25;
 
@@ -30,7 +30,7 @@ public class GoBangBoard extends View {
     private static final float BOARD_FRAME_WIDTH_DP = 1;//棋盘框的线宽度
     private static final float BOARD_POINT_RADIUS_DP = 2;//棋盘五个圆点的半径宽度
 
-    private int[][] mBoard = new int[BOARD_SIZE][BOARD_SIZE];
+    public static int[][] mBoard = new int[BOARD_SIZE][BOARD_SIZE];
     private int mLastPutX;
     private int mLastPutY;
 
@@ -230,6 +230,10 @@ public class GoBangBoard extends View {
                 }
             }
         }
+    }
+
+    public int[][] getTable() {
+        return mBoard;
     }
 
     public interface PutChessListener {

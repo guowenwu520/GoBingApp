@@ -14,6 +14,7 @@ public class GameActivity extends BaseActivity {
 
     @Override
     protected Fragment createFragment() {
+        //获取值判断模式
         int gameMode = getIntent().getIntExtra(Constants.GAME_MODE, Constants.INVALID_MODE);
         Fragment fragment = null;
 
@@ -24,7 +25,6 @@ public class GameActivity extends BaseActivity {
                 fragment = new CoupleGameFragment();
                 break;
             case Constants.WIFI_MODE:
-            case Constants.BLUE_TOOTH_MODE:
                 fragment = NetGameFragment.newInstance(gameMode);
                 break;
         }

@@ -7,7 +7,7 @@
 
     <com.example.materialdesign.views.ButtonRectangle
         android:id="@+id/tv_coupe_mode"
-        android:text="双人模式"
+        android:text="人机模式"
         android:background="#1E88E5"
         android:layout_width="100dp"
         android:layout_height="55dp"/>
@@ -15,13 +15,6 @@
     <com.example.materialdesign.views.ButtonRectangle
         android:id="@+id/tv_wifi_mode"
         android:text="WIFI对战"
-        android:background="#1E88E5"
-        android:layout_width="100dp"
-        android:layout_height="55dp"/>
-
-    <com.example.materialdesign.views.ButtonRectangle
-        android:id="@+id/tv_blue_tooth_mode"
-        android:text="蓝牙对战"
         android:background="#1E88E5"
         android:layout_width="100dp"
         android:layout_height="55dp"/>
