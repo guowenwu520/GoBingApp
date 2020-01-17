@@ -37,9 +37,10 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         //蓝牙模式
         ButtonRectangle blueToothTextView = (ButtonRectangle) root.findViewById(R.id.tv_blue_tooth_mode);
          wifiTextView.setEnabled(true);
-         blueToothTextView.setEnabled(false);
+         blueToothTextView.setEnabled(true);
         coupeTextView.setOnClickListener(this);
         wifiTextView.setOnClickListener(this);
+        blueToothTextView.setOnClickListener(this);
     }
 
     @Override
