@@ -2,7 +2,9 @@ package com.example.gobang_app.view.fragment;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -45,11 +47,13 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
         , View.OnTouchListener, View.OnClickListener {
 
     private static final int MOVE_BACK_TIMES = 2;
-
-    private boolean mIsHost;
+  //出牌方
+    private boolean mIsHost,Probability;
+    //判断出牌
     private boolean mIsMePlay = false;
     private boolean mIsGameEnd = false;
     private boolean mIsOpponentLeaved = false;
+
     private boolean mCanClickConnect = true;
     private int mLeftMoveBackTimes = MOVE_BACK_TIMES;
 
@@ -70,10 +74,24 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
         netGameFragment.setArguments(bundle);
         return netGameFragment;
     }
-
+    Handler handler=new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(android.os.Message msg) {
+            if(msg.what==0){
+                TipsMsg((String) msg.obj);
+            }
+            return false;
+        }
+    });
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(Math.random()*10>5.0){
+            Probability=true;
+        }else{
+            //mCurrentWhite=false;
+            Probability=false;
+        }
         init();
     }
 
@@ -109,6 +127,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     }
 
     private void init() {
+        //弹出选择框，创建还是加入
         mDialogCenter = new DialogCenter(getActivity());
         mDialogCenter.showCompositionDialog();
         Bundle bundle = getArguments();
@@ -124,7 +143,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
 
     private void reset() {
         mBoard.clearBoard();
-        mIsMePlay = mIsHost;
+        mIsMePlay = !mIsHost;
         mIsGameEnd = false;
         mOperationQueue.clear();
         mLeftMoveBackTimes = MOVE_BACK_TIMES;
@@ -153,30 +172,6 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
 
     private String makeMoveBackString() {
         return "悔  棋" + "(" + mLeftMoveBackTimes + ")";
-    }
-
-    @Override
-    public void onGetPairedToothPeers(List<BluetoothDevice> deviceList) {
-        mDialogCenter.updateBlueToothPeers(deviceList, false);
-    }
-
-    @Override
-    public void onFindBlueToothPeers(List<BluetoothDevice> deviceList) {
-        mDialogCenter.updateBlueToothPeers(deviceList, true);
-    }
-
-    @Override
-    public void onBlueToothDeviceConnected() {
-        ToastUtil.showShort(getActivity(), "蓝牙连接成功");
-        if (mIsHost) {
-            mDialogCenter.enableWaitingPlayerDialogsBegin();
-        }
-    }
-
-    @Override
-    public void onBlueToothDeviceConnectFailed() {
-        ToastUtil.showShort(getActivity(), "蓝牙连接失败");
-        mCanClickConnect = true;
     }
 
     @Override
@@ -220,11 +215,19 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
                     Message ack = MessageWrapper.getHostBeginAckMessage();
                     sendMessage(ack);
                     ToastUtil.showShort(getActivity(), "游戏开始");
+                    if(!mIsHost)TipsMsg("你执黑棋,先行");
+                    else{
+                        TipsMsg("你执白棋,对方先行");
+                    }
                     mCanClickConnect = true;
                     break;
                 case Message.MSG_TYPE_BEGIN_ACK:
                     //host
                     mDialogCenter.dismissWaitingAndComposition();
+                    if(!mIsHost)TipsMsg("你执黑棋,先行");
+                    else{
+                        TipsMsg("你执白棋,对方先行");
+                    }
                     mIsMePlay = true;
                     break;
                 case Message.MSG_TYPE_GAME_DATA:
@@ -232,7 +235,11 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
                     mIsMePlay = true;
                     break;
                 case Message.MSG_TYPE_GAME_END:
-                    ToastUtil.showShortDelay(getActivity(), message.mMessage, 1000);
+                    android.os.Message msg=new android.os.Message();
+                    msg.what=0;
+                    msg.obj="你输了";
+                    handler.sendMessage(msg);
+                    //ToastUtil.showShortDelay(getActivity(), message.mMessage, 1000);
                     mIsMePlay = false;
                     mIsGameEnd = true;
                     break;
@@ -331,7 +338,10 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     @Override
     public void onPutChess(int[][] board, int x, int y) {
         if (mIsMePlay && GameJudger.isGameEnd(board, x, y)) {
-            ToastUtil.showShort(getActivity(), "你赢了");
+            android.os.Message message=new android.os.Message();
+            message.what=0;
+            message.obj="你赢了";
+            handler.sendMessage(message);
             Message end = MessageWrapper.getGameEndMessage("你输了");
             sendMessage(end);
             mIsMePlay = false;
@@ -344,18 +354,31 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
 
     @Subscribe
     public void onCreateGame(WifiCreateGameEvent event) {
-        mIsHost = true;
+        mIsHost = Probability;
         mDialogCenter.showWaitingPlayerDialog();
         mNetPresenter.startService();
     }
 
     @Subscribe
     public void onJoinGame(WifiJoinGameEvent event) {
-        mIsHost = false;
+        mIsHost =!Probability;
         mDialogCenter.showPeersDialog();
         mNetPresenter.findPeers();
     }
-
+    private void TipsMsg(String str) {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_msg_nextstep,null,false);
+        builder.setView(view);
+        ButtonRectangle whiteGame = (ButtonRectangle) view.findViewById(R.id.btn_tips_game);
+        whiteGame.setText(str);
+        AlertDialog alertDialog=builder.show();
+        whiteGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+    }
     @Subscribe
     public void onCancelCompositionDialog(WifiCancelCompositionEvent event) {
         getActivity().finish();

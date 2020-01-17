@@ -5,7 +5,6 @@ import android.content.Context;
 
 
 import com.example.gobang_app.bean.Message;
-import com.example.gobang_app.interator.BlueToothInteractor;
 import com.example.gobang_app.interator.NetInteractor;
 import com.example.gobang_app.interator.WifiInteractor;
 import com.example.gobang_app.util.Constants;
@@ -27,8 +26,6 @@ public class NetPresenter implements INetInteratorCallback {
         mGameMode = gameMode;
         if (isWifiMode()) {
             mNetInteractor = new WifiInteractor(context, this);
-        } else {
-            mNetInteractor = new BlueToothInteractor(context, this);
         }
     }
 
@@ -69,15 +66,6 @@ public class NetPresenter implements INetInteratorCallback {
         mNetView.onWifiDeviceConnected(device);
     }
 
-    @Override
-    public void onBlueToothDeviceConnected() {
-        mNetView.onBlueToothDeviceConnected();
-    }
-
-    @Override
-    public void onBlueToothDeviceConnectFailed() {
-        mNetView.onBlueToothDeviceConnectFailed();
-    }
 
     @Override
     public void onStartWifiServiceFailed() {
@@ -89,15 +77,6 @@ public class NetPresenter implements INetInteratorCallback {
         mNetView.onFindWifiPeers(deviceList);
     }
 
-    @Override
-    public void onGetPairedToothPeers(List<BluetoothDevice> deviceList) {
-        mNetView.onGetPairedToothPeers(deviceList);
-    }
-
-    @Override
-    public void onFindBlueToothPeers(List<BluetoothDevice> deviceList) {
-        mNetView.onFindBlueToothPeers(deviceList);
-    }
 
     @Override
     public void onPeersNotFound() {

@@ -16,17 +16,11 @@ public interface INetInteratorCallback {
 
     void onWifiDeviceConnected(SalutDevice device);
 
-    void onBlueToothDeviceConnected();
-
-    void onBlueToothDeviceConnectFailed();
 
     void onStartWifiServiceFailed();
 
     void onFindWifiPeers(List<SalutDevice> deviceList);
 
-    void onGetPairedToothPeers(List<BluetoothDevice> deviceList);
-
-    void onFindBlueToothPeers(List<BluetoothDevice> deviceList);
 
     void onPeersNotFound();
 
