@@ -2,11 +2,17 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bggo"
-    android:gravity="center">
-
+    android:background="@drawable/bggo">
+    <ImageView
+        android:id="@+id/qustion"
+        android:layout_margin="20dp"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/qure"
+        android:layout_width="30dp"
+        android:layout_height="30dp" />
     <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/board_container"
+        android:layout_centerVertical="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         card_view:cardElevation="5dp">

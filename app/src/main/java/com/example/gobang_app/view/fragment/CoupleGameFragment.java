@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.example.gobang_app.R;
 import com.example.gobang_app.bean.Point;
@@ -42,6 +43,7 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
    //自定义棋盘
     private GoBangBoard mGoBangBoard;
     private ButtonRectangle mStartGame;
+    private ImageView imageView;
     Handler handler=new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -82,6 +84,9 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
 
         mCurrentWhite = mIsWhiteFirst;
 
+        imageView=view.findViewById(R.id.qustion);
+        imageView.setOnClickListener(this);
+        
         mStartGame = (ButtonRectangle) view.findViewById(R.id.btn_start_game);
         mStartGame.setOnClickListener(this);
 
@@ -104,7 +109,19 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
             case R.id.btn_exit_game:
                 getActivity().finish();
                 break;
+            case R.id.qustion:
+                showQ();
+                break;
         }
+    }
+
+    private void showQ() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_qustion,null,false);
+        ViewGroup.LayoutParams layoutParams=new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,300);
+        view.setLayoutParams(layoutParams);
+        builder.setView(view);
+       builder.show();
     }
 
     private void Step(int nexts) {

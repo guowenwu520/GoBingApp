@@ -8,20 +8,20 @@
    <ImageView
        android:layout_marginBottom="100dp"
        android:scaleType="fitXY"
-       android:src="@drawable/go_bing"
+       android:src="@drawable/logo"
        android:layout_width="200dp"
        android:layout_height="130dp" />
     <com.example.materialdesign.views.ButtonRectangle
         android:id="@+id/tv_coupe_mode"
         android:text="人机模式"
-        android:background="#e69d21"
+        android:background="#b1afac"
         android:layout_width="300dp"
         android:layout_height="90dp"/>
     <com.example.materialdesign.views.ButtonRectangle
         android:id="@+id/tv_wifi_mode"
         android:layout_marginTop="30dp"
         android:text="WIFI对战"
-        android:background="#ef9414"
+        android:background="#b3b1ad"
         android:layout_width="300dp"
         android:layout_height="90dp"/>
 
