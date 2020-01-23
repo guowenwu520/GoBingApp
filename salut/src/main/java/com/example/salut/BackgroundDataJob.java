@@ -9,6 +9,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 
@@ -16,7 +17,7 @@ public class BackgroundDataJob implements AsyncJob.OnBackgroundJob{
 
     private Salut salutInstance;
     private Socket clientSocket;
-    private String data;
+    private String data="";
 
     public BackgroundDataJob(Salut salutInstance, Socket clientSocket)
     {
@@ -30,13 +31,20 @@ public class BackgroundDataJob implements AsyncJob.OnBackgroundJob{
         try
         {
             //If this code is reached, a client has connected and transferred data.
-            Log.v(Salut.TAG, "A device is sending data...");
-
-            BufferedInputStream dataStreamFromOtherDevice = new BufferedInputStream(clientSocket.getInputStream());
-            data = new String(ByteStreams.toByteArray(dataStreamFromOtherDevice), Charsets.UTF_8);
-            dataStreamFromOtherDevice.close();
-
-            Log.d(Salut.TAG, "\nSuccessfully received data.\n");
+            Log.e(Salut.TAG, "A device is sending data...");
+            InputStreamReader reader=new InputStreamReader(clientSocket.getInputStream());
+            BufferedReader bufferedReader=new BufferedReader(reader);
+            String line = "";
+            while((line = bufferedReader.readLine()) != null) {
+                data = line;
+                break;
+            }
+         //   System.out.println(serializedClient);
+        //     data = new String(ByteStreams.toByteArray(dataStreamFromOtherDevice), Charsets.UTF_8);
+         //   dataStreamFromOtherDevice.close();
+            bufferedReader.close();
+            reader.close();
+            Log.e(Salut.TAG, "\nSuccessfully received data.\n"+data);
 
             if(!data.isEmpty())
             {

@@ -3,17 +3,24 @@ package com.example.salut;
 import android.util.Log;
 
 import com.arasthel.asyncjob.AsyncJob;
-import com.bluelinelabs.logansquare.LoganSquare;
 import com.example.salut.Callbacks.SalutCallback;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import static com.example.salut.Salut.TAG;
+//客户端
 public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob{
 
 
@@ -36,7 +43,7 @@ public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob
 
     @Override
     public void doOnBackground() {
-        Log.d(Salut.TAG, "\nAttempting to transfer registration data with the server...");
+        Log.d(TAG, "\nAttempting to transfer registration data with the server...");
         Socket registrationSocket = new Socket();
 
         try
@@ -46,28 +53,37 @@ public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob
             registrationSocket.setSendBufferSize(BUFFER_SIZE);
 
             //If this code is reached, we've connected to the server and will transfer data.
-            Log.d(Salut.TAG, salutInstance.thisDevice.deviceName + " is connected to the server, transferring registration data...");
+            Log.d(TAG, salutInstance.thisDevice.deviceName + " is connected to the server, transferring registration data...");
 
-            DataOutputStream toClient = new DataOutputStream(registrationSocket.getOutputStream());
-            DataInputStream fromServer = new DataInputStream(registrationSocket.getInputStream());
-
+            OutputStreamWriter we=new OutputStreamWriter(registrationSocket.getOutputStream());
+            InputStreamReader reader=new InputStreamReader(registrationSocket.getInputStream());
+            BufferedReader bufferedReader=new BufferedReader(reader);
+            BufferedWriter bufferedWriter=new BufferedWriter(we);
             //TODO Use buffered streams.
-            Log.v(Salut.TAG, "Sending client registration data to server...");
-            String serializedClient = LoganSquare.serialize(salutInstance.thisDevice);
-            toClient.writeUTF(serializedClient);
-            toClient.flush();
+            Log.e(TAG, "Sending client registration data to server...     {"+salutInstance.thisDevice+"}   ");
+            String serializedClient = new Gson().toJson(salutInstance.thisDevice);
+            Log.e(TAG, "doOnBackground: "+serializedClient );
+            serializedClient+="\n";
+            bufferedWriter.write(serializedClient);
+            bufferedWriter.flush();
 
 
             if(!salutInstance.thisDevice.isRegistered)
             {
-                Log.v(Salut.TAG, "Receiving server registration data...");
-                String serializedServer = fromServer.readUTF();
-                SalutDevice serverDevice = LoganSquare.parse(serializedServer, SalutDevice.class);
-
+                    Log.v(TAG, "Receiving server registration data...");
+                String serializedServer = "";
+                String line = null;
+                while((line = bufferedReader.readLine()) != null) {Log.e("erer","3434");
+                    serializedServer += line;
+                }
+                System.out.println(serializedServer);
+              //  String serializedServer = bufferedReader.readLine();
+                TypeToken<SalutDevice> typeToken=new TypeToken<SalutDevice>(){};
+                SalutDevice serverDevice = new Gson().fromJson(serializedServer, typeToken.getType());
                 serverDevice.serviceAddress = registrationSocket.getInetAddress().toString().replace("/", "");
                 salutInstance.registeredHost = serverDevice;
 
-                Log.d(Salut.TAG, "Registered Host | " + salutInstance.registeredHost.deviceName);
+                Log.d(TAG, "Registered Host | " + salutInstance.registeredHost.deviceName);
 
                 salutInstance.thisDevice.isRegistered = true;
                 salutInstance.dataReceiver.activity.runOnUiThread(new Runnable() {
@@ -81,8 +97,13 @@ public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob
                 salutInstance.startListeningForData();
             }
             else {
-
-                String registrationCode = fromServer.readUTF(); //TODO Use to verify
+                String registrationCode = "";
+                String line = null;
+                while((line = bufferedReader.readLine()) != null) {
+                    registrationCode += line;break;
+                }
+                System.out.println(registrationCode);
+               // String registrationCode = bufferedReader.readLine(); //TODO Use to verify
 
                 salutInstance.thisDevice.isRegistered = false;
                 salutInstance.registeredHost = null;
@@ -99,19 +120,19 @@ public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob
                     });
                 }
 
-                Log.d(Salut.TAG, "This device has successfully been unregistered from the server.");
+                Log.d(TAG, "This device has successfully been unregistered from the server.");
 
             }
 
-            toClient.close();
-            fromServer.close();
-
+            bufferedWriter.close();
+            bufferedReader.close();
+            we.close();reader.close();
         }
         catch (IOException ex)
         {
             ex.printStackTrace();
 
-            Log.e(Salut.TAG, "An error occurred while attempting to register or unregister.");
+            Log.e(TAG, "An error occurred while attempting to register or unregister.");
             salutInstance.dataReceiver.activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -142,7 +163,7 @@ public class BackgroundClientRegistrationJob implements AsyncJob.OnBackgroundJob
             }
             catch(Exception ex)
             {
-                Log.e(Salut.TAG, "Failed to close registration socket.");
+                Log.e(TAG, "Failed to close registration socket.");
             }
         }
     }

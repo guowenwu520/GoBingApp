@@ -25,12 +25,12 @@ public class NetPresenter implements INetInteratorCallback {
         mNetView = netView;
         mGameMode = gameMode;
         if (isWifiMode()) {
-            mNetInteractor = new WifiInteractor(context, this);
+            mNetInteractor = new WifiInteractor(context, this,gameMode);
         }
     }
 
     private boolean isWifiMode() {
-        return mGameMode == Constants.WIFI_MODE;
+        return mGameMode == Constants.WIFI_MODE||mGameMode==Constants.WIFI_SWAP_MODE;
     }
 
     public void init() {
@@ -52,13 +52,15 @@ public class NetPresenter implements INetInteratorCallback {
     public void sendToDevice(Message message, boolean isHost) {
         mNetInteractor.sendToDevice(message, isHost);
     }
-
+    public void sendToDevice2(Message message, boolean isHost) {
+        mNetInteractor.sendToDevice2(message, isHost);
+    }
     public void findPeers() {
         mNetInteractor.findPeers();
     }
 
-    public void connectToHost(SalutDevice salutHost, BluetoothDevice blueToothHost) {
-        mNetInteractor.connectToHost(salutHost, blueToothHost);
+    public void connectToHost(SalutDevice salutHost) {
+        mNetInteractor.connectToHost(salutHost);
     }
 
     @Override

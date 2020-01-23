@@ -3,14 +3,20 @@ package com.example.salut;
 import android.util.Log;
 
 import com.arasthel.asyncjob.AsyncJob;
-import com.bluelinelabs.logansquare.LoganSquare;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
-
+//服务端
 public class BackgroundServerRegistrationJob implements AsyncJob.OnBackgroundJob{
 
     private Salut salutInstance;
@@ -27,22 +33,32 @@ public class BackgroundServerRegistrationJob implements AsyncJob.OnBackgroundJob
         try {
             //If this code is reached, a client has connected and transferred data.
             Log.d(Salut.TAG, "A device has connected to the server, transferring data...");
-            DataInputStream fromClient = new DataInputStream(clientSocket.getInputStream());
-            DataOutputStream toClient = new DataOutputStream(clientSocket.getOutputStream());
-
+        //    DataInputStream fromClient = new DataInputStream(clientSocket.getInputStream());
+           OutputStreamWriter toClient=new OutputStreamWriter(clientSocket.getOutputStream());
+            InputStreamReader reader=new InputStreamReader(clientSocket.getInputStream());
+            BufferedReader bufferedReader=new BufferedReader(reader);
+            BufferedWriter bufferedWriter=new BufferedWriter(toClient);
             Log.v(Salut.TAG, "Receiving client registration data...");
-            String serializedClient = fromClient.readUTF();
-
-            SalutDevice clientDevice = LoganSquare.parse(serializedClient, SalutDevice.class);
+            String serializedClient = "";
+            String line = null;
+            while((line = bufferedReader.readLine()) != null) {
+                serializedClient += line;
+                break;
+            }
+            System.out.println(serializedClient);
+           // String serializedClient = bufferedReader.readLine();
+            Log.e("sd", "doOnBackground: "+serializedClient );
+            TypeToken<SalutDevice> typeToken=new TypeToken<SalutDevice>(){};
+            SalutDevice clientDevice = new Gson().fromJson(serializedClient, typeToken.getType());
             clientDevice.serviceAddress = clientSocket.getInetAddress().toString().replace("/", "");
 
 
             if (!clientDevice.isRegistered) {
 
                 Log.v(Salut.TAG, "Sending server registration data...");
-                String serializedServer = LoganSquare.serialize(salutInstance.thisDevice);
-                toClient.writeUTF(serializedServer);
-                toClient.flush();
+                String serializedServer = new Gson().toJson(salutInstance.thisDevice)+"\n";
+                bufferedWriter.write(serializedServer);
+                bufferedWriter.flush();
 
                 Log.d(Salut.TAG, "Registered device and user: " + clientDevice);
                 clientDevice.isRegistered = true;
@@ -65,8 +81,8 @@ public class BackgroundServerRegistrationJob implements AsyncJob.OnBackgroundJob
                 Log.d(Salut.TAG, "\nReceived request to unregister device.\n");
 
                 Log.v(Salut.TAG, "Sending registration code...");
-                toClient.writeUTF(Salut.UNREGISTER_CODE);
-                toClient.flush();
+                bufferedWriter.write(Salut.UNREGISTER_CODE);
+                bufferedWriter.flush();
 
                 for(SalutDevice registered : salutInstance.registeredClients)
                 {
@@ -78,9 +94,10 @@ public class BackgroundServerRegistrationJob implements AsyncJob.OnBackgroundJob
                 }
             }
 
-            fromClient.close();
+            bufferedReader.close();
             toClient.close();
-
+            bufferedWriter.close();
+            reader.close();
         } catch (Exception ex) {
             ex.printStackTrace();
             Log.e(Salut.TAG, "An error occurred while dealing with registration for a client.");

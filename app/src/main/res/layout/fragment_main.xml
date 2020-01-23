@@ -24,5 +24,4 @@
         android:background="#b3b1ad"
         android:layout_width="300dp"
         android:layout_height="90dp"/>
-
 </LinearLayout>

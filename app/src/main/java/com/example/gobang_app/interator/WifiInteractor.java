@@ -14,6 +14,7 @@ import com.example.salut.Salut;
 import com.example.salut.SalutDataReceiver;
 import com.example.salut.SalutDevice;
 import com.example.salut.SalutServiceData;
+import com.google.gson.Gson;
 
 
 /**
@@ -30,7 +31,8 @@ public class WifiInteractor extends NetInteractor implements SalutDataCallback {
 
     private SalutDevice mSendToDevice;
 
-    public WifiInteractor(Context context, INetInteratorCallback callback) {
+
+    public WifiInteractor(Context context, INetInteratorCallback callback,int isMode) {
         mCallback = callback;
         mContext = context;
     }
@@ -104,8 +106,8 @@ public class WifiInteractor extends NetInteractor implements SalutDataCallback {
             }
         }, 6000);
     }
-
-    public void connectToHost(SalutDevice salutHost, BluetoothDevice blueToothHost) {
+//点击设备之后，尝试连接
+    public void connectToHost(SalutDevice salutHost) {
         mSendToDevice = salutHost;
         mSalut.registerWithHost(salutHost, new SalutCallback() {
             @Override
@@ -123,7 +125,7 @@ public class WifiInteractor extends NetInteractor implements SalutDataCallback {
     public void sendToDevice(Message message, boolean isHost) {
         if (isHost) {
             if (mSendToDevice != null) {
-                mSalut.sendToDevice(mSendToDevice, message, new SalutCallback() {
+                mSalut.sendToDevice(mSendToDevice, new Gson().toJson(message)+"\n", new SalutCallback() {
                     @Override
                     public void call() {
                         Log.i(TAG, "sendToDevice, send data failed");
@@ -132,7 +134,7 @@ public class WifiInteractor extends NetInteractor implements SalutDataCallback {
                 });
             }
         } else {
-            mSalut.sendToHost(message, new SalutCallback() {
+            mSalut.sendToHost(new Gson().toJson(message)+"\n", new SalutCallback() {
                 @Override
                 public void call() {
                     Log.i(TAG, "sendToHost, send data failed");
@@ -140,7 +142,26 @@ public class WifiInteractor extends NetInteractor implements SalutDataCallback {
             });
         }
     }
-
+    public void sendToDevice2(Message message, boolean isHost) {
+        if (isHost) {
+            if (mSendToDevice != null) {
+                mSalut.sendToDevice(mSendToDevice, new Gson().toJson(message)+"\n", new SalutCallback() {
+                    @Override
+                    public void call() {
+                        Log.i(TAG, "sendToDevice, send data failed");
+                        mCallback.onSendMessageFailed();
+                    }
+                });
+            }
+        } else {
+            mSalut.sendToHost(new Gson().toJson(message)+"\n", new SalutCallback() {
+                @Override
+                public void call() {
+                    Log.i(TAG, "sendToHost, send data failed");
+                }
+            });
+        }
+    }
     @Override
     public void onDataReceived(Object o) {
         mCallback.onDataReceived(o);

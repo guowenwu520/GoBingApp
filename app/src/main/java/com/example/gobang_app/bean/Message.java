@@ -1,12 +1,9 @@
 package com.example.gobang_app.bean;
 
-import com.bluelinelabs.logansquare.annotation.JsonField;
-import com.bluelinelabs.logansquare.annotation.JsonObject;
 
 /**
  * Created by Xuf on 2016/1/10.
  */
-@JsonObject
 public class Message {
     public static final int MSG_TYPE_HOST_BEGIN = 0;//房主开始游戏
     public static final int MSG_TYPE_BEGIN_ACK = 1;//玩家收到房主开始游戏的确认消息
@@ -17,79 +14,151 @@ public class Message {
     public static final int MSG_TYPE_EXIT = 6;
     public static final int MSG_TYPE_MOVE_BACK_REQ = 7;//悔棋请求
     public static final int MSG_TYPE_MOVE_BACK_RESP = 8;//悔棋应答
+   public  static final int MSG_TYPE_SELECT_SHOU=9;//提示选择方式
 
-    @JsonField
+    public  static final int MSG_TYPE_SELECT_S1=10;//选择白子
+    public  static final int MSG_TYPE_SELECT_S2=11;//选择黑子
+    public  static final int MSG_TYPE_SELECT_S3=12;//让对方在行
+
+    public  static final int MSG_TYPE_SELECT_S1ED=13;//相应选白子
+    public  static final int MSG_TYPE_SELECT_S2ED=14;//相应选择黑子
+    public  static final int MSG_TYPE_SELECT_S3ED=15;//相应让对方在行
+    //消息类型
     public int mMessageType;
-
-    @JsonField
+//行子步数
+    public int mNesxtStep;
+    //棋子颜色
     public boolean mIsWhite;
 
-    @JsonField
     public Point mGameData;
 
-    @JsonField
     public String mMessage;
 
-    @JsonField
     public boolean mAgreeRestart;
 
-    @JsonField
     public boolean mAgreeMoveBack;
 
-    //使用@JsonObject必须提供public默认构造函数
-    public Message() {
-
+    public static int getMsgTypeSelectS3() {
+        return MSG_TYPE_SELECT_S3;
     }
 
-    private Message(Builder builder) {
-        this.mMessageType = builder.mMessageType;
-        this.mIsWhite = builder.mIsWhite;
-        this.mGameData = builder.mGameData;
-        this.mMessage = builder.mMessage;
-        this.mAgreeRestart = builder.mAgreeRestart;
-        this.mAgreeMoveBack = builder.mAgreeMoveBack;
+    public static int getMsgTypeSelectS1ed() {
+        return MSG_TYPE_SELECT_S1ED;
     }
 
-    //组装消息时建议使用Builder
-    public static class Builder {
-        private final int mMessageType;
-        private boolean mIsWhite;
-        private Point mGameData;
-        private String mMessage;
-        private boolean mAgreeRestart;
-        private boolean mAgreeMoveBack;
+    public static int getMsgTypeSelectS2ed() {
+        return MSG_TYPE_SELECT_S2ED;
+    }
 
-        public Builder(int messageType) {
-            mMessageType = messageType;
-        }
+    public static int getMsgTypeSelectS3ed() {
+        return MSG_TYPE_SELECT_S3ED;
+    }
 
-        public Builder isWhite(boolean isWhite) {
-            mIsWhite = isWhite;
-            return this;
-        }
+    public static int getMsgTypeSelectShou() {
+        return MSG_TYPE_SELECT_SHOU;
+    }
 
-        public Builder gameData(Point gameData) {
-            mGameData = gameData;
-            return this;
-        }
+    public static int getMsgTypeSelectS1() {
+        return MSG_TYPE_SELECT_S1;
+    }
 
-        public Builder message(String message) {
-            mMessage = message;
-            return this;
-        }
+    public static int getMsgTypeSelectS2() {
+        return MSG_TYPE_SELECT_S2;
+    }
 
-        public Builder agreeRestart(boolean agreeRestart) {
-            mAgreeRestart = agreeRestart;
-            return this;
-        }
+    public static int getMsgTypeSelect_s3() {
+        return MSG_TYPE_SELECT_S3;
+    }
 
-        public Builder agreeMoveBack(boolean agreeMoveBack) {
-            mAgreeMoveBack = agreeMoveBack;
-            return this;
-        }
+    public int getmNesxtStep() {
+        return mNesxtStep;
+    }
 
-        public Message build() {
-            return new Message(this);
-        }
+    public void setmNesxtStep(int mNesxtStep) {
+        this.mNesxtStep = mNesxtStep;
+    }
+
+    public static int getMsgTypeHostBegin() {
+        return MSG_TYPE_HOST_BEGIN;
+    }
+
+    public static int getMsgTypeBeginAck() {
+        return MSG_TYPE_BEGIN_ACK;
+    }
+
+    public static int getMsgTypeGameData() {
+        return MSG_TYPE_GAME_DATA;
+    }
+
+    public static int getMsgTypeGameEnd() {
+        return MSG_TYPE_GAME_END;
+    }
+
+    public static int getMsgTypeGameRestartReq() {
+        return MSG_TYPE_GAME_RESTART_REQ;
+    }
+
+    public static int getMsgTypeGameRestartResp() {
+        return MSG_TYPE_GAME_RESTART_RESP;
+    }
+
+    public static int getMsgTypeExit() {
+        return MSG_TYPE_EXIT;
+    }
+
+    public static int getMsgTypeMoveBackReq() {
+        return MSG_TYPE_MOVE_BACK_REQ;
+    }
+
+    public static int getMsgTypeMoveBackResp() {
+        return MSG_TYPE_MOVE_BACK_RESP;
+    }
+
+    public int getmMessageType() {
+        return mMessageType;
+    }
+
+    public void setmMessageType(int mMessageType) {
+        this.mMessageType = mMessageType;
+    }
+
+    public boolean ismIsWhite() {
+        return mIsWhite;
+    }
+
+    public void setmIsWhite(boolean mIsWhite) {
+        this.mIsWhite = mIsWhite;
+    }
+
+    public Point getmGameData() {
+        return mGameData;
+    }
+
+    public void setmGameData(Point mGameData) {
+        this.mGameData = mGameData;
+    }
+
+    public String getmMessage() {
+        return mMessage;
+    }
+
+    public void setmMessage(String mMessage) {
+        this.mMessage = mMessage;
+    }
+
+    public boolean ismAgreeRestart() {
+        return mAgreeRestart;
+    }
+
+    public void setmAgreeRestart(boolean mAgreeRestart) {
+        this.mAgreeRestart = mAgreeRestart;
+    }
+
+    public boolean ismAgreeMoveBack() {
+        return mAgreeMoveBack;
+    }
+
+    public void setmAgreeMoveBack(boolean mAgreeMoveBack) {
+        this.mAgreeMoveBack = mAgreeMoveBack;
     }
 }

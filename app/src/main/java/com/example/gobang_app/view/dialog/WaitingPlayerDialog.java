@@ -40,9 +40,10 @@ public class WaitingPlayerDialog extends BaseDialog {
 
         return view;
     }
-
+//有连接了
     public void setBeginEnable(){
         mBeginButton.setEnabled(true);
+        //开始
         mBeginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

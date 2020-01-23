@@ -3,9 +3,9 @@ package com.example.salut;
 import android.util.Log;
 
 import com.arasthel.asyncjob.AsyncJob;
-import com.bluelinelabs.logansquare.LoganSquare;
 import com.example.salut.Callbacks.SalutCallback;
 import com.google.common.base.Charsets;
+import com.google.gson.Gson;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -19,11 +19,11 @@ public class BackgroundDataSendJob implements AsyncJob.OnBackgroundJob{
 
     private final int BUFFER_SIZE = 65536;
     private Salut salutInstance;
-    private Object data;
+    private String data;
     private SalutCallback onFailure;
     private SalutDevice device;
 
-    public BackgroundDataSendJob(SalutDevice device, Salut salutInstance, Object data, SalutCallback onFailure)
+    public BackgroundDataSendJob(SalutDevice device, Salut salutInstance, String data, SalutCallback onFailure)
     {
         this.data = data;
         this.device = device;
@@ -43,17 +43,17 @@ public class BackgroundDataSendJob implements AsyncJob.OnBackgroundJob{
             dataSocket.setSendBufferSize(BUFFER_SIZE);
 
             //If this code is reached, a client has connected and transferred data.
-            Log.d(Salut.TAG, "Connected, transferring data...");
+            Log.e(Salut.TAG, "Connected, transferring data...");
             BufferedOutputStream dataStreamToOtherDevice = new BufferedOutputStream(dataSocket.getOutputStream());
 
-            String dataToSend = LoganSquare.serialize(data);
+            String dataToSend = data;
 
             dataStreamToOtherDevice.write(dataToSend.getBytes(Charsets.UTF_8));
             dataStreamToOtherDevice.flush();
             dataStreamToOtherDevice.close();
 
-            Log.d(Salut.TAG, "Successfully sent data.");
-
+            Log.e(Salut.TAG, "Successfully sent data.");
+            Log.e("senddata",dataToSend);
         } catch (Exception ex) {
             Log.d(Salut.TAG, "An error occurred while sending data to a device.");
             if (onFailure != null)

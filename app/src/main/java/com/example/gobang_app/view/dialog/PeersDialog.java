@@ -35,7 +35,6 @@ public class PeersDialog extends BaseDialog {
 
     private DeviceAdapter mAdapter;
     private List<SalutDevice> mSalutDevices = new ArrayList<>();
-    private List<BluetoothDevice> mBlueToothDevices = new ArrayList<>();
 
     @Nullable
     @Override
@@ -55,7 +54,6 @@ public class PeersDialog extends BaseDialog {
             public void onClick(View v) {
                 BusProvider.getInstance().post(new WifiCancelPeerEvent());
                 mSalutDevices.clear();
-                mBlueToothDevices.clear();
             }
         });
 
@@ -65,13 +63,6 @@ public class PeersDialog extends BaseDialog {
     public void updateWifiPeers(List<SalutDevice> data) {
         mAdapter.setSalutDevices(data);
         mProgressBar.setVisibility(View.INVISIBLE);
-    }
-
-    public void updateBlueToothPeers(List<BluetoothDevice> bluetoothDevices, boolean append) {
-        mAdapter.setBlueToothDevices(bluetoothDevices, append);
-        if (append){
-            mProgressBar.setVisibility(View.INVISIBLE);
-        }
     }
 
     private class DeviceAdapter extends BaseAdapter {
@@ -84,23 +75,15 @@ public class PeersDialog extends BaseDialog {
             notifyDataSetChanged();
         }
 
-        public void setBlueToothDevices(List<BluetoothDevice> blueToothDevices, boolean append) {
-            if (!append) {
-                mBlueToothDevices.clear();
-            }
-            mBlueToothDevices.addAll(blueToothDevices);
-            mIsSalutDevice = false;
-            notifyDataSetChanged();
-        }
 
         @Override
         public int getCount() {
-            return mIsSalutDevice ? mSalutDevices.size() : mBlueToothDevices.size();
+            return  mSalutDevices.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mIsSalutDevice ? mSalutDevices.get(position) : mBlueToothDevices.get(position);
+            return  mSalutDevices.get(position);
         }
 
         @Override
@@ -117,16 +100,15 @@ public class PeersDialog extends BaseDialog {
                 convertView.setTag(holder);
             }
 
-            String device = mIsSalutDevice ? mSalutDevices.get(position).deviceName : mBlueToothDevices.get(position).getName();
+            String device = mSalutDevices.get(position).deviceName;
             holder = (ViewHolder) convertView.getTag();
             holder.device.setText(device);
+            //点击选择设备
             holder.device.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mIsSalutDevice) {
-                        BusProvider.getInstance().post(new ConnectPeerEvent(mSalutDevices.get(position), null));
-                    } else {
-                        BusProvider.getInstance().post(new ConnectPeerEvent(null, mBlueToothDevices.get(position)));
+                        BusProvider.getInstance().post(new ConnectPeerEvent(mSalutDevices.get(position)));
                     }
                     mProgressBar.setVisibility(View.INVISIBLE);
                 }

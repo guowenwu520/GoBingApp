@@ -34,9 +34,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         ButtonRectangle coupeTextView = (ButtonRectangle) root.findViewById(R.id.tv_coupe_mode);
         //wifi模式
         ButtonRectangle wifiTextView = (ButtonRectangle) root.findViewById(R.id.tv_wifi_mode);
+        //wifi模式swap2
+      //  ButtonRectangle wifiTextViewswap = (ButtonRectangle) root.findViewById(R.id.tv_wifi_swapmode);
         //添加点击监听
          coupeTextView.setOnClickListener(this);
         wifiTextView.setOnClickListener(this);
+      //  wifiTextViewswap.setOnClickListener(this);
     }
 
     @Override

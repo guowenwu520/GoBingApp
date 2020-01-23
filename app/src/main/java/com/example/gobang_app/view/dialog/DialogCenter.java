@@ -72,9 +72,6 @@ public class DialogCenter {
         mPeersDialog.updateWifiPeers(data);
     }
 
-    public void updateBlueToothPeers(List<BluetoothDevice> data, boolean append) {
-        mPeersDialog.updateBlueToothPeers(data, append);
-    }
 
     public void showRestartWaitingDialog() {
         mRestartWaitingDialog.show(preShowDialog(RestartWaitingDialog.TAG), RestartWaitingDialog.TAG);

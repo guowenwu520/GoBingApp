@@ -195,6 +195,7 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
             @Override
             public void onGroupInfoAvailable(WifiP2pGroup group) {
 
+                Log.e(TAG, "connectToDevice: sds333dsdsdsd");
                 if (isRunningAsHost && !registrationIsRunning) {
                     if (info.groupFormed && !group.getClientList().isEmpty()) {
                         startHostRegistrationServer();
@@ -205,6 +206,8 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
                         Log.e(Salut.TAG, "This device is still connected to an old host for some reason. A forced disconnect will be attempted.");
                         forceDisconnect();
                     }
+
+                    Log.e(TAG, "connectToDevice: sds565656dsdsdsd");
                     Log.v(Salut.TAG, "Successfully connected to another device.");
                     startRegistrationForClient(new InetSocketAddress(info.groupOwnerAddress.getHostAddress(), SALUT_SERVER_PORT));
                 }
@@ -286,12 +289,13 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
     private void startRegistrationForClient(final InetSocketAddress hostDeviceAddress)
     {
 
+        Log.e(TAG, "connectToDevice: sdsds撒旦发射点dsdsd");
         BackgroundClientRegistrationJob registrationJob = new BackgroundClientRegistrationJob(this, hostDeviceAddress);
         AsyncJob.doInBackground(registrationJob);
 
     }
 
-    private void sendData(final SalutDevice device, final Object data, @Nullable final SalutCallback onFailure)
+    private void sendData(final SalutDevice device, final String data, @Nullable final SalutCallback onFailure)
     {
         BackgroundDataSendJob sendDataToDevice = new BackgroundDataSendJob(device, this, data, onFailure);
         AsyncJob.doInBackground(sendDataToDevice);
@@ -353,7 +357,7 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
             }
         });
     }
-
+//开始连接
     public void registerWithHost(final SalutDevice device, @Nullable SalutCallback onRegistered, @Nullable final SalutCallback onRegistrationFail)
     {
         BackgroundClientRegistrationJob.onRegistered = onRegistered;
@@ -362,25 +366,26 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
         connectToDevice(device, onRegistrationFail);
     }
 
-    public void sendToAllDevices(final Object data, @Nullable final SalutCallback onFailure)
+    public void sendToAllDevices(final String data, @Nullable final SalutCallback onFailure)
     {
-        if(isRunningAsHost)
-        {
+//        if(isRunningAsHost)
+//        {
             for(SalutDevice registered : registeredClients) {
                 sendData(registered, data, onFailure);
             }
-        }
-        else
-        {
-            Log.e(TAG, "You must be running as the host to invoke this method.");
-        }
+      //  }
+//        else
+//        {
+//            Log.e(TAG, "You must be running as the host to invoke this method.");
+//        }
     }
 
-    public void sendToHost(final Object data, @Nullable final SalutCallback onFailure)
+    public void sendToHost(final String data, @Nullable final SalutCallback onFailure)
     {
-        if(!isRunningAsHost && thisDevice.isRegistered)
+        if(thisDevice.isRegistered)
         {
             sendData(registeredHost, data, onFailure);
+
         }
         else
         {
@@ -388,11 +393,11 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
         }
     }
 
-    public void sendToDevice(final SalutDevice device, final Object data, @Nullable final SalutCallback onFailure)
+    public void sendToDevice(final SalutDevice device, final String data, @Nullable final SalutCallback onFailure)
     {
         sendData(device, data, onFailure);
     }
-
+//断开连接
     public void cancelConnecting()
     {
         manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
@@ -410,12 +415,13 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
         stopServiceDiscovery(true);
         connectingIsCanceled = true;
     }
-
+//连接
     private void connectToDevice(final SalutDevice device, final SalutCallback onFailure)
     {
 
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.macAddress;
+        Log.e(TAG, "connectToDevice: sdsdsdsdsd");
         manager.connect(channel, config, new WifiP2pManager.ActionListener() {
 
             @Override
@@ -511,8 +517,8 @@ public class Salut implements WifiP2pManager.ConnectionInfoListener{
                 manager.createGroup(channel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Log.v(TAG, "Successfully created group.");
-                        Log.d(TAG, "Successfully created " + thisDevice.serviceName + " service running on port " + thisDevice.servicePort);
+                        Log.e(TAG, "Successfully created group.");
+                        Log.e(TAG, "Successfully created " + thisDevice.serviceName + " service running on port " + thisDevice.servicePort);
                         isRunningAsHost = true;
                         if (onSuccess != null) {
                             onSuccess.call();

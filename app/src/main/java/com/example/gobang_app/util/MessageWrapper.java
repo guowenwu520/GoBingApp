@@ -10,38 +10,68 @@ import com.example.gobang_app.bean.Point;
 public class MessageWrapper {
 
     public static Message getHostBeginMessage() {
-        return new Message.Builder(Message.MSG_TYPE_HOST_BEGIN).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_HOST_BEGIN);
+        return message;
     }
 
     public static Message getHostBeginAckMessage() {
-        return new Message.Builder(Message.MSG_TYPE_BEGIN_ACK).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_BEGIN_ACK);
+        return message;
     }
 
-    public static Message getSendDataMessage(Point point, boolean isWhite) {
-        return new Message.Builder(Message.MSG_TYPE_GAME_DATA).gameData(point).isWhite(isWhite).build();
+    public static Message getSendDataMessage(Point point, boolean isWhite,int NextStep) {
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_GAME_DATA);
+        message.setmIsWhite(isWhite);
+        message.setmGameData(point);
+        message.setmNesxtStep(NextStep);
+        return message;
     }
 
     public static Message getGameEndMessage(String endMessage) {
-        return new Message.Builder(Message.MSG_TYPE_GAME_END).message(endMessage).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_GAME_END);
+        message.setmMessage(endMessage);
+        return message;
     }
 
     public static Message getGameRestartReqMessage() {
-        return new Message.Builder(Message.MSG_TYPE_GAME_RESTART_REQ).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_GAME_RESTART_REQ);
+        return message;
     }
 
     public static Message getGameRestartRespMessage(boolean agreeRestart) {
-        return new Message.Builder(Message.MSG_TYPE_GAME_RESTART_RESP).agreeRestart(agreeRestart).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_GAME_RESTART_RESP);
+        message.setmAgreeRestart(agreeRestart);
+        return message;
     }
 
     public static Message getGameExitMessage() {
-        return new Message.Builder(Message.MSG_TYPE_EXIT).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_EXIT);
+        return message;
     }
 
     public static Message getGameMoveBackReqMessage() {
-        return new Message.Builder(Message.MSG_TYPE_MOVE_BACK_REQ).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_MOVE_BACK_REQ);
+        return message;
     }
 
     public static Message getGameMoveBackRespMessage(boolean agreeMoveBack) {
-        return new Message.Builder(Message.MSG_TYPE_MOVE_BACK_RESP).agreeMoveBack(agreeMoveBack).build();
+        Message message=new Message();
+        message.setmMessageType(Message.MSG_TYPE_MOVE_BACK_RESP);
+        message.setmAgreeMoveBack(agreeMoveBack);
+        return message;
+    }
+
+    public static Message getGameSwapMessage(int TYPE) {
+        Message message=new Message();
+        message.setmMessageType(TYPE);
+        return message;
     }
 }

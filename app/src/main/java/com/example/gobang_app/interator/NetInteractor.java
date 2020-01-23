@@ -31,12 +31,14 @@ public class NetInteractor {
     public void sendToDevice(Message message, boolean isHost) {
 
     }
+    public void sendToDevice2(Message message, boolean isHost) {
 
+    }
     public void findPeers() {
 
     }
 
-    public void connectToHost(SalutDevice salutHost, BluetoothDevice blueToothHost) {
+    public void connectToHost(SalutDevice salutHost) {
 
     }
 }

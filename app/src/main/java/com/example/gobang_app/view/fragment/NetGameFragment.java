@@ -1,16 +1,16 @@
 package com.example.gobang_app.view.fragment;
 
-import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
-import com.bluelinelabs.logansquare.LoganSquare;
 import com.example.gobang_app.EventBus.ConnectPeerEvent;
 import com.example.gobang_app.EventBus.ExitGameAckEvent;
 import com.example.gobang_app.EventBus.MoveBackAckEvent;
@@ -26,6 +26,7 @@ import com.example.gobang_app.bean.Message;
 import com.example.gobang_app.bean.Point;
 import com.example.gobang_app.presenter.INetView;
 import com.example.gobang_app.presenter.NetPresenter;
+import com.example.gobang_app.util.Constants;
 import com.example.gobang_app.util.GameJudger;
 import com.example.gobang_app.util.MessageWrapper;
 import com.example.gobang_app.util.OperationQueue;
@@ -34,6 +35,8 @@ import com.example.gobang_app.view.dialog.DialogCenter;
 import com.example.gobang_app.widget.GoBangBoard;
 import com.example.materialdesign.views.ButtonRectangle;
 import com.example.salut.SalutDevice;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.squareup.otto.Subscribe;
 
 import java.io.IOException;
@@ -53,10 +56,15 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     private boolean mIsMePlay = false;
     private boolean mIsGameEnd = false;
     private boolean mIsOpponentLeaved = false;
-
+    //判读是否刚刚开局
+    private boolean misfristStart = true,mTwoStart=false;
+   private int netmode;
+   //行棋步数，默认一人一步
+    private int nextstep=1;
     private boolean mCanClickConnect = true;
     private int mLeftMoveBackTimes = MOVE_BACK_TIMES;
 
+    private ImageView imageView;
     private OperationQueue mOperationQueue;
 
     private NetPresenter mNetPresenter;
@@ -86,6 +94,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //随机先后
         if(Math.random()*10>5.0){
             Probability=true;
         }else{
@@ -117,7 +126,8 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
 
         ButtonRectangle restart = (ButtonRectangle) view.findViewById(R.id.btn_restart);
         restart.setOnClickListener(this);
-
+        imageView=view.findViewById(R.id.qustion);
+        imageView.setOnClickListener(this);
         ButtonRectangle exitGame = (ButtonRectangle) view.findViewById(R.id.btn_exit);
         exitGame.setOnClickListener(this);
 
@@ -127,34 +137,140 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     }
 
     private void init() {
-        //弹出选择框，创建还是加入
-        mDialogCenter = new DialogCenter(getActivity());
-        mDialogCenter.showCompositionDialog();
-        Bundle bundle = getArguments();
-        int gameMode = bundle.getInt(NET_MODE);
-        mNetPresenter = new NetPresenter(getActivity(), this, gameMode);
-        mNetPresenter.init();
-        mOperationQueue = new OperationQueue();
+        dialog_Select__TWO_Msg_Mode();
+
+    }
+
+    private void dialog_Select__TWO_Msg_Mode() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_select_nextstep,null,false);
+        builder.setView(view);
+        ButtonRectangle whiteGame = (ButtonRectangle) view.findViewById(R.id.btn_white_game);
+        ButtonRectangle blackGame = (ButtonRectangle) view.findViewById(R.id.btn_black_game);
+        ButtonRectangle cancel = (ButtonRectangle) view.findViewById(R.id.btn_cancel);
+        cancel.setVisibility(View.GONE);
+        whiteGame.setText("普通模式");
+        blackGame.setText("SWAP2模式");
+        AlertDialog alertDialog=builder.show();
+        //选普通模式
+        whiteGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //弹出选择框，创建还是加入
+                mDialogCenter = new DialogCenter(getActivity());
+                mDialogCenter.showCompositionDialog();
+                Bundle bundle = getArguments();
+                int gameMode = bundle.getInt(NET_MODE);
+                netmode=Constants.WIFI_MODE;
+                mNetPresenter = new NetPresenter(getActivity(), NetGameFragment.this, gameMode);
+                mNetPresenter.init();
+                mOperationQueue = new OperationQueue();
+                alertDialog.dismiss();
+            }
+        });
+        //选黑棋SWAp2
+        blackGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //弹出选择框，创建还是加入
+                mDialogCenter = new DialogCenter(getActivity());
+                mDialogCenter.showCompositionDialog();
+                Bundle bundle = getArguments();
+                int gameMode = bundle.getInt(NET_MODE);
+                netmode=Constants.WIFI_SWAP_MODE;
+                mNetPresenter = new NetPresenter(getActivity(), NetGameFragment.this, gameMode);
+                mNetPresenter.init();
+                mOperationQueue = new OperationQueue();
+                alertDialog.dismiss();
+            }
+        });
     }
 
     private void unInit() {
         mNetPresenter.unInit();
     }
 
-    private void reset() {
-        mBoard.clearBoard();
-        mIsMePlay = !mIsHost;
-        mIsGameEnd = false;
-        mOperationQueue.clear();
-        mLeftMoveBackTimes = MOVE_BACK_TIMES;
-        mMoveBack.setText(makeMoveBackString());
-        mMoveBack.setEnabled(true);
-    }
+    private void resetf() {
+        if(netmode==Constants.WIFI_MODE){
+            if (!mIsHost) {
+                TipsMsg("你执黑棋,先行");
+                mIsMePlay = true;
+            } else {
+                TipsMsg("你执白棋,对方先行");
+                mIsMePlay = false;
+            }
+            mBoard.clearBoard();
+         //   mIsMePlay = true;
+            mIsGameEnd = false;
+            misfristStart=true;
+            nextstep=1;
+            mOperationQueue.clear();
+            mLeftMoveBackTimes = MOVE_BACK_TIMES;
+            mMoveBack.setText(makeMoveBackString());
+            mMoveBack.setEnabled(true);
+        }else{
+            if (!mIsHost) {
+                TipsMsg("你执黑棋,先行三步");
+                mIsMePlay = true;
+                nextstep = 3;//先行三步
+            } else {
+                TipsMsg("你执白棋,对方先行三步");
+                mIsMePlay = false;
+                nextstep = 0;//先行三步
+            }
+            mBoard.clearBoard();
+            mIsGameEnd = false;
+            misfristStart = true;
+            mOperationQueue.clear();
+            mLeftMoveBackTimes = MOVE_BACK_TIMES;
+            mMoveBack.setText(makeMoveBackString());
+            mMoveBack.setEnabled(true);
+        }
 
+    }
+    private void resetjie() {
+        if(netmode==Constants.WIFI_MODE) {
+            mBoard.clearBoard();
+            if (!mIsHost) {
+                TipsMsg("你执黑棋,先行");
+                mIsMePlay = true;
+            } else {
+                TipsMsg("你执白棋,对方先行");
+                mIsMePlay = false;
+            }
+           // mIsMePlay = true;
+            mIsGameEnd = false;
+            misfristStart = true;
+            nextstep = 0;
+            mOperationQueue.clear();
+            mLeftMoveBackTimes = MOVE_BACK_TIMES;
+            mMoveBack.setText(makeMoveBackString());
+            mMoveBack.setEnabled(true);
+        }else{
+            if (!mIsHost) {
+                TipsMsg("你执黑棋,先行三步");
+                mIsMePlay = true;
+                nextstep = 3;//先行三步
+            } else {
+                TipsMsg("你执白棋,对方先行三步");
+                mIsMePlay = false;
+                nextstep = 0;//先行三步
+            }
+            mBoard.clearBoard();
+            mIsGameEnd = false;
+            misfristStart = true;
+            mOperationQueue.clear();
+            mLeftMoveBackTimes = MOVE_BACK_TIMES;
+            mMoveBack.setText(makeMoveBackString());
+            mMoveBack.setEnabled(true);
+        }
+    }
     private void sendMessage(Message message) {
         mNetPresenter.sendToDevice(message, mIsHost);
     }
-
+    private void sendMessage2(Message message) {
+        mNetPresenter.sendToDevice2(message, mIsHost);
+    }
     private void moveBackReq() {
         if (mIsMePlay || mIsGameEnd) {
             return;
@@ -205,34 +321,97 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     @Override
     public void onDataReceived(Object o) {
         String str = (String) o;
-        try {
-            Message message = LoganSquare.parse(str, Message.class);
+            try {
+                TypeToken<Message> typeToken=new TypeToken<Message>(){};
+                Log.e("etdata",str);
+                Message message = new Gson().fromJson(str, typeToken.getType());
             int type = message.mMessageType;
             switch (type) {
                 case Message.MSG_TYPE_HOST_BEGIN:
                     //joiner
-                    mDialogCenter.dismissPeersAndComposition();
-                    Message ack = MessageWrapper.getHostBeginAckMessage();
-                    sendMessage(ack);
-                    ToastUtil.showShort(getActivity(), "游戏开始");
-                    if(!mIsHost)TipsMsg("你执黑棋,先行");
-                    else{
-                        TipsMsg("你执白棋,对方先行");
+
+                    mBoard.clearBoard();
+                    if (netmode == Constants.WIFI_MODE) {
+                        mDialogCenter.dismissPeersAndComposition();
+                        Message ack = MessageWrapper.getHostBeginAckMessage();
+                        sendMessage(ack);
+                        ToastUtil.showShort(getActivity(), "游戏开始");
+                        if (!mIsHost) {
+                            TipsMsg("你执黑棋,先行");
+                            mIsMePlay = true;
+                        } else {
+                            TipsMsg("你执白棋,对方先行");
+                            mIsMePlay = false;
+                        }
+                        mCanClickConnect = true;
+                    } else {
+                        mDialogCenter.dismissPeersAndComposition();
+                        Message ack = MessageWrapper.getHostBeginAckMessage();
+                        sendMessage(ack);
+                        ToastUtil.showShort(getActivity(), "游戏开始");
+                        if (!mIsHost) {
+                            TipsMsg("你执黑棋,先行三步");
+                            mIsMePlay = true;
+                            nextstep = 3;//先行三步
+                        } else {
+                            TipsMsg("你执白棋,对方先行三步");
+                            mIsMePlay = false;
+                        }
+                        mCanClickConnect = true;
                     }
-                    mCanClickConnect = true;
                     break;
                 case Message.MSG_TYPE_BEGIN_ACK:
                     //host
-                    mDialogCenter.dismissWaitingAndComposition();
-                    if(!mIsHost)TipsMsg("你执黑棋,先行");
-                    else{
+
+                    mBoard.clearBoard();
+                    if (netmode == Constants.WIFI_MODE) {
+                        mDialogCenter.dismissWaitingAndComposition();
+                    if (!mIsHost) {
+                        TipsMsg("你执黑棋,先行");
+                        mIsMePlay = true;
+                    } else {
                         TipsMsg("你执白棋,对方先行");
+                        mIsMePlay = false;
                     }
-                    mIsMePlay = true;
+            }else{
+
+                        mDialogCenter.dismissWaitingAndComposition();
+                    if (!mIsHost) {
+                        TipsMsg("你执黑棋,先行三步");
+                        mIsMePlay = true;
+                        nextstep=3;//先行三步
+                    } else {
+                        TipsMsg("你执白棋,对方先行三步");
+                        mIsMePlay = false;
+                    }
+                    mCanClickConnect = true;
+                }
                     break;
+                    //得到对方落子消息
                 case Message.MSG_TYPE_GAME_DATA:
                     mBoard.putChess(message.mIsWhite, message.mGameData.x, message.mGameData.y);
-                    mIsMePlay = true;
+                    if(netmode==Constants.WIFI_MODE) {
+                        mIsMePlay = true;
+                        nextstep=1;
+                    }else{
+                        //判断先手三次走完
+                        if(misfristStart&&message.mNesxtStep==1) {
+                            dialog_Select_Msg();
+                            misfristStart = false;
+                        }
+                        else if(!misfristStart&&mTwoStart&&message.mNesxtStep==1) {
+                            dialog_Select__TWO_Msg();
+                             mTwoStart=false;
+                        }
+                        //禁止我方出棋
+                        if(message.mNesxtStep!=1){
+                            mIsMePlay = false;
+                        }
+                        if(message.mNesxtStep==1&&!misfristStart&&!mTwoStart){
+                            mIsMePlay=true;
+                            nextstep=1;
+                        }
+                    }
                     break;
                 case Message.MSG_TYPE_GAME_END:
                     android.os.Message msg=new android.os.Message();
@@ -243,29 +422,33 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
                     mIsMePlay = false;
                     mIsGameEnd = true;
                     break;
+                    //发送重新开局请求
                 case Message.MSG_TYPE_GAME_RESTART_REQ:
                     if (mIsGameEnd) {
                         Message resp = MessageWrapper.getGameRestartRespMessage(true);
                         sendMessage(resp);
-                        reset();
+                        resetjie();
                     } else {
                         mDialogCenter.showRestartAckDialog();
                     }
                     break;
+                    //响应开局请求
                 case Message.MSG_TYPE_GAME_RESTART_RESP:
                     if (message.mAgreeRestart) {
-                        reset();
+                        resetf();
                         ToastUtil.showShort(getActivity(), "游戏开始");
                     } else {
                         ToastUtil.showShort(getActivity(), "对方不同意重新开始游戏");
                     }
                     mDialogCenter.dismissRestartWaitingDialog();
                     break;
+                    //悔棋
                 case Message.MSG_TYPE_MOVE_BACK_REQ:
                     if (mIsMePlay) {
                         mDialogCenter.showMoveBackAckDialog();
                     }
                     break;
+                    //回应悔棋
                 case Message.MSG_TYPE_MOVE_BACK_RESP:
                     if (message.mAgreeMoveBack) {
                         doMoveBack();
@@ -285,10 +468,126 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
                     mIsMePlay = true;
                     mIsGameEnd = true;
                     mIsOpponentLeaved = true;
+                    break;
+                    //对方选择了白子
+                case Message.MSG_TYPE_SELECT_S1:
+                    TipsMsg("你执黑棋先行");
+                    mIsMePlay=false;
+                    misfristStart=false;
+                    mTwoStart=false;
+                    nextstep=0;
+                    break;
+                //让子
+                case Message.MSG_TYPE_SELECT_S3:
+                    TipsMsg("对方选择让棋");
+                    mIsMePlay=false;
+                    mTwoStart=true;
+                    misfristStart=false;
+                    nextstep=0;
+                    break;
+                    //选黑
+                case Message.MSG_TYPE_SELECT_S2:
+                    TipsMsg("你执白棋");
+                    mIsMePlay=true;
+                    mTwoStart=false;
+                    misfristStart=false;
+                    nextstep=1;
+                    break;
+                    //回应选择白子
+                case Message.MSG_TYPE_SELECT_S1ED:
+                    break;
+                //回应让子
+                case Message.MSG_TYPE_SELECT_S3ED:
+                    //回应选择黑子
+                    break;
+                case Message.MSG_TYPE_SELECT_S2ED:
+                    break;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void dialog_Select__TWO_Msg() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_select_nextstep,null,false);
+        builder.setView(view);
+        ButtonRectangle whiteGame = (ButtonRectangle) view.findViewById(R.id.btn_white_game);
+        ButtonRectangle blackGame = (ButtonRectangle) view.findViewById(R.id.btn_black_game);
+        ButtonRectangle cancel = (ButtonRectangle) view.findViewById(R.id.btn_cancel);
+        cancel.setVisibility(View.GONE);
+        AlertDialog alertDialog=builder.show();
+        //选白棋
+        whiteGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Message resp = MessageWrapper.getGameSwapMessage(Message.MSG_TYPE_SELECT_S1);
+                nextstep=1;
+                mIsMePlay=true;
+                sendMessage(resp);
+                alertDialog.dismiss();
+            }
+        });
+        //选黑棋
+        blackGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //机器在走一步
+                //  Step(1);
+                Message resp = MessageWrapper.getGameSwapMessage(Message.MSG_TYPE_SELECT_S2);
+                nextstep=0;
+                mIsMePlay=false;
+                sendMessage(resp);
+                alertDialog.dismiss();
+            }
+        });
+    }
+
+    private void dialog_Select_Msg() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_select_nextstep,null,false);
+        builder.setView(view);
+        ButtonRectangle whiteGame = (ButtonRectangle) view.findViewById(R.id.btn_white_game);
+        ButtonRectangle blackGame = (ButtonRectangle) view.findViewById(R.id.btn_black_game);
+        ButtonRectangle cancel = (ButtonRectangle) view.findViewById(R.id.btn_cancel);
+        AlertDialog alertDialog=builder.show();
+        //选白棋
+        whiteGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Message resp = MessageWrapper.getGameSwapMessage(Message.MSG_TYPE_SELECT_S1);
+                nextstep=1;
+                mIsMePlay=true;
+                sendMessage(resp);
+                alertDialog.dismiss();
+            }
+        });
+        //选黑棋
+        blackGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //机器在走一步
+              //  Step(1);
+                Message resp = MessageWrapper.getGameSwapMessage(Message.MSG_TYPE_SELECT_S2);
+                nextstep=0;
+                mIsMePlay=false;
+                sendMessage(resp);
+                alertDialog.dismiss();
+            }
+        });
+        //不选
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+             //   Step(2);
+                mTwoStart=true;
+                Message resp = MessageWrapper.getGameSwapMessage(Message.MSG_TYPE_SELECT_S3);
+                nextstep=2;
+                mIsMePlay=true;
+                sendMessage(resp);
+                alertDialog.dismiss();
+            }
+        });
     }
 
     @Override
@@ -313,23 +612,61 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
                     mDialogCenter.showExitAckDialog();
                 }
                 break;
+                case R.id.qustion:
+                showQ();
+                break;
         }
     }
-
+    private void showQ() {
+        AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+        View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_qustion,null,false);
+        ViewGroup.LayoutParams layoutParams=new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,300);
+        view.setLayoutParams(layoutParams);
+        builder.setView(view);
+        builder.show();
+    }
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (!mIsGameEnd && mIsMePlay) {
+                if (!mIsGameEnd && mIsMePlay&&nextstep>0) {
                     float x = motionEvent.getX();
-                    float y = motionEvent.getY();
+                    float y = motionEvent.getY();Log.e("er0",nextstep+"  "+mIsMePlay+" "+misfristStart+" "+mTwoStart);
                     Point point = mBoard.convertPoint(x, y);
-                    if (mBoard.putChess(mIsHost, point.x, point.y)) {
-                        Message data = MessageWrapper.getSendDataMessage(point, mIsHost);
-                        sendMessage(data);
+
+
+                           if(nextstep==2&&misfristStart){
+                               if (mBoard.putChess(!mIsHost, point.x, point.y)) {
+                                   misfristStart = false;
+                                   Log.e("er2",nextstep+"  "+mIsMePlay+" "+misfristStart+" "+mTwoStart+" mIsHost="+mIsHost);
+                                   Message data2 = MessageWrapper.getSendDataMessage(point, !mIsHost, nextstep);//发送黑白棋，落子消息，步数
+                                   sendMessage2(data2);
+                                   nextstep--;
+                               }
+                           }else if(!misfristStart&&mTwoStart&&nextstep==1){
+                               if (mBoard.putChess(!mIsHost, point.x, point.y)) {
+                                   Log.e("er3",nextstep+"  "+mIsMePlay+" "+misfristStart+" "+mTwoStart+" mIsHost="+mIsHost);
+                                   mTwoStart = false;
+                                   Message data2 = MessageWrapper.getSendDataMessage(point, !mIsHost, nextstep);//发送黑白棋，落子消息，步数
+                                   sendMessage2(data2);
+                                   nextstep--;
+                               }
+                           }else    if(nextstep>0)
+                               if (mBoard.putChess(mIsHost, point.x, point.y)) {
+                                   Log.e("e1r",nextstep+"  "+mIsMePlay+" "+misfristStart+" "+mTwoStart+" mIsHost="+mIsHost);
+                                   Message data = MessageWrapper.getSendDataMessage(point, mIsHost, nextstep);//发送黑白棋，落子消息，步数
+                                   sendMessage(data);
+                                   nextstep--;
+                               }
+
+
+
+
+
+                    if(nextstep<=0)
                         mIsMePlay = false;
+
                     }
-                }
                 break;
         }
         return false;
@@ -351,20 +688,21 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
         point.setXY(x, y);
         mOperationQueue.addOperation(point);
     }
-
+//创建游戏
     @Subscribe
     public void onCreateGame(WifiCreateGameEvent event) {
-        mIsHost = Probability;
+        mIsHost = true;
         mDialogCenter.showWaitingPlayerDialog();
         mNetPresenter.startService();
     }
-
+///加入游戏
     @Subscribe
     public void onJoinGame(WifiJoinGameEvent event) {
-        mIsHost =!Probability;
+        mIsHost =false;
         mDialogCenter.showPeersDialog();
         mNetPresenter.findPeers();
     }
+    //弹框提示
     private void TipsMsg(String str) {
         AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
         View view= LayoutInflater.from(getContext()).inflate(R.layout.dialog_msg_nextstep,null,false);
@@ -379,6 +717,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
             }
         });
     }
+    //取消
     @Subscribe
     public void onCancelCompositionDialog(WifiCancelCompositionEvent event) {
         getActivity().finish();
@@ -387,7 +726,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     @Subscribe
     public void onConnectPeer(ConnectPeerEvent event) {
         if (mCanClickConnect) {
-            mNetPresenter.connectToHost(event.mSalutDevice, event.mBlueToothDevice);
+            mNetPresenter.connectToHost(event.mSalutDevice);
             mCanClickConnect = false;
         }
     }
@@ -396,14 +735,14 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
     public void onCancelConnectPeer(WifiCancelPeerEvent event) {
         mDialogCenter.dismissPeersDialog();
     }
-
+//开始游戏
     @Subscribe
     public void onBeginGame(WifiBeginWaitingEvent event) {
         Message begin = MessageWrapper.getHostBeginMessage();
         sendMessage(begin);
 
     }
-
+//取消等待
     @Subscribe
     public void onCancelWaitingDialog(WifiCancelWaitingEvent event) {
         mDialogCenter.dismissWaitingPlayerDialog();
@@ -415,7 +754,7 @@ public class NetGameFragment extends BaseGameFragment implements INetView, GoBan
         Message ack = MessageWrapper.getGameRestartRespMessage(event.mAgreeRestart);
         sendMessage(ack);
         if (event.mAgreeRestart) {
-            reset();
+            resetf();
         }
         mDialogCenter.dismissRestartAckDialog();
     }

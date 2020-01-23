@@ -40,6 +40,8 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
     private  boolean isPeople=false;
     //思考时间3秒
     private int times=1000;
+    private  int step=2;
+    private boolean isCupe=false;
    //自定义棋盘
     private GoBangBoard mGoBangBoard;
     private ButtonRectangle mStartGame;
@@ -103,7 +105,8 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
                     mCurrentWhite = mIsWhiteFirst;
                     setWidgets();
                     Step(3);
-
+                    isCupe=true;
+                    step=2;
                 }
                 break;
             case R.id.btn_exit_game:
@@ -129,7 +132,7 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
             @Override
             public void run() {
                 mGoBangBoard.setEnabled(false);
-                //先走3步
+                   //先走3步
                 for (int i=0;i<nexts;i++){
                     try {
                         Thread.sleep(times);
@@ -143,8 +146,6 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
                 mGoBangBoard.setEnabled(true);
                 if(nexts==3) {
                     handler.sendEmptyMessageAtTime(0, 0);
-                }else  if(nexts==2){
-                    handler.sendEmptyMessageAtTime(2, 0);
                 }
             }
         }.start();
@@ -179,7 +180,9 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Step(2);
+               // Step(2);
+                isCupe=true;
+                step=2;
                 alertDialog.dismiss();
             }
         });
@@ -213,6 +216,7 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
             resetWidgets();
         }else if(isPeople){
             //机器走一步
+            if(!isCupe)
             Step(1);
         }
     }
@@ -240,6 +244,13 @@ public class CoupleGameFragment extends Fragment implements GoBangBoard.PutChess
                 Point point = mGoBangBoard.convertPoint(x, y);
                 //下子成功切换黑白棋
                 if (mGoBangBoard.putChess(mCurrentWhite, point.x, point.y)) {
+                    if(isCupe){
+                        step--;
+                        if(step==0){
+                            handler.sendEmptyMessageAtTime(2, 0);
+                            isCupe=false;
+                        }
+                    }
                     mCurrentWhite = !mCurrentWhite;
                 }
                 break;

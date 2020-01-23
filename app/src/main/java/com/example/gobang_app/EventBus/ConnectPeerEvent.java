@@ -10,10 +10,8 @@ import com.example.salut.SalutDevice;
 public class ConnectPeerEvent {
 
     public SalutDevice mSalutDevice;
-    public BluetoothDevice mBlueToothDevice;
 
-    public ConnectPeerEvent(SalutDevice device, BluetoothDevice bluetoothDevice) {
+    public ConnectPeerEvent(SalutDevice device) {
         mSalutDevice = device;
-        mBlueToothDevice = bluetoothDevice;
     }
 }

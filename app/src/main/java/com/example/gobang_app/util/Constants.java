@@ -11,7 +11,7 @@ public class Constants {
     public static final int INVALID_MODE = -1;
     public static final int COUPE_MODE = 1;
     public static final int WIFI_MODE = 2;
-    public static final int BLUE_TOOTH_MODE = 3;
+    public static final int WIFI_SWAP_MODE = 3;
 
     public static final int CHESS_NONE = 0;
     public static final int CHESS_WHITE = 1;
